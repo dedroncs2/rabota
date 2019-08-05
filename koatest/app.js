@@ -2,34 +2,15 @@ const Koa = require('koa');
 const Router = require('koa-router');
 const cors = require('@koa/cors');
 const koaBody = require('koa-body');
-const Sequelize = require('sequelize');
+const db = require(__dirname + '/models/index.js')
 
 
 const app = new Koa();
 const router = new Router();
-const sequelize = new Sequelize('postgres://postgres:asd@localhost:5432/todosDB', {define:{raw: true}});
 
 app.use(cors());
 app.use(router.routes());
-sequelize
-  .authenticate()
-  .then(() => {
-    console.log('Connection has been established successfully.');
-  })
-  .catch(err => {
-    console.error('Unable to connect to the database:', err);
-  });
-const Todo = sequelize.define('todo', {
-  text: {
-    type: Sequelize.STRING,
-  },
-  done: {
-    type: Sequelize.BOOLEAN,
-  }
-}, {
-});
 
-sequelize.sync();
 
 
 
@@ -37,9 +18,8 @@ sequelize.sync();
 //   ctx.body = tasks[ctx.params.id];
 // });
 
-
 router.get('/tasks', async (ctx,next)=>{
-  let todos = await Todo.findAll(
+  let todos = await db.Todos.findAll(
     {where:{},order:[['id','DESC']]},
     {raw: true},
     );
@@ -54,7 +34,7 @@ router.get('/tasks', async (ctx,next)=>{
   // }
 });
 router.post('/tasks', koaBody(), async (ctx)=>{
-  await Todo.create(ctx.request.body);
+  await db.Todos.create(ctx.request.body);
   ctx.body="add task ok";
   // try{
   //   let task = ctx.request.body;
@@ -70,7 +50,7 @@ router.post('/tasks', koaBody(), async (ctx)=>{
   // }
 });
 router.del('/tasks',koaBody(),async (ctx, next) => {
-  await Todo.destroy({
+  await db.Todos.destroy({
     where:{
       done: true
     }
@@ -90,7 +70,7 @@ router.del('/tasks',koaBody(),async (ctx, next) => {
 });
 
 router.post('/tasks/:id', koaBody(), async (ctx)=>{
-  await Todo.update({
+  await db.Todos.update({
     text: ctx.request.body.text,
     done: ctx.request.body.done,
   },{
@@ -119,7 +99,7 @@ router.post('/tasks/:id', koaBody(), async (ctx)=>{
 });
 
 router.delete('/tasks/:id', koaBody(), async (ctx)=>{
-  await Todo.destroy(
+  await db.Todos.destroy(
     {where: {id: ctx.params.id}}
   );
   ctx.body= "delete id done";
